@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Révision — Agent de gardiennage</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy: #14213D;
+    --navy-2: #1D2E52;
+    --navy-3: #24396B;
+    --gold: #E3A83B;
+    --gold-2: #F3C36A;
+    --cream: #F4EFE4;
+    --paper: #FBF8F1;
+    --ok: #4C9A6E;
+    --ok-bg: #DCEEE1;
+    --bad: #C1443C;
+    --bad-bg: #F6DEDB;
+    --ink: #14213D;
+    --muted: #6B7385;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  html{ scroll-padding-top: env(safe-area-inset-top, 0px); height:100%; }
+  *{ box-sizing: border-box; }
+  body{
+    margin:0; height:100%;
+    background: var(--navy);
+    color: var(--cream);
+    font-family: 'Work Sans', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1,h2,h3, .display{
+    font-family: 'Oswald', sans-serif;
+    letter-spacing: 0.01em;
+  }
+
+  /* ---------- top bar ---------- */
+  .topbar{
+    padding: 18px 18px 14px;
+    background: linear-gradient(180deg, var(--navy) 0%, var(--navy-2) 100%);
+    border-bottom: 3px solid var(--gold);
+    position: sticky; top:0; z-index: 20;
+    padding-top: calc(18px + env(safe-area-inset-top, 0px));
+  }
+  .topbar-row{
+    display:flex; align-items:center; justify-content:space-between; gap: 12px;
+  }
+  .brand{
+    display:flex; align-items:center; gap:10px;
+  }
+  .brand-badge{
+    width:34px; height:34px; border-radius:50%;
+    background: var(--gold);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Oswald',sans-serif; font-weight:700; color:var(--navy); font-size:15px;
+    flex-shrink:0;
+  }
+  .brand-text h1{ margin:0; font-size: 17px; font-weight:600; color: var(--paper); line-height:1.15;}
+  .brand-text span{ font-size:11.5px; color: var(--gold-2); }
+  .countdown{
+    text-align:right; font-family:'Oswald',sans-serif;
+    flex-shrink:0;
+  }
+  .countdown .num{ font-size:20px; font-weight:700; color: var(--gold-2); line-height:1; }
+  .countdown .lbl{ font-size: 9.5px; color:#AEB6CC; text-transform:uppercase; letter-spacing:0.08em; }
+
+  .tabs{
+    display:flex; gap:6px; margin-top:14px; overflow-x:auto;
+  }
+  .tab{
+    flex: 1 1 0;
+    padding: 9px 6px;
+    text-align:center;
+    background: rgba(255,255,255,0.05);
+    border:1px solid rgba(255,255,255,0.12);
+    border-radius: 9px;
+    color:#C7CCDB;
+    font-size: 12.5px;
+    font-weight:600;
+    cursor:pointer;
+    user-select:none;
+    white-space:nowrap;
+  }
+  .tab.active{
+    background: var(--gold);
+    color: var(--navy);
+    border-color: var(--gold);
+  }
+
+  /* ---------- category chips ---------- */
+  .chiprow{
+    display:flex; gap:8px; overflow-x:auto; padding: 14px 18px 4px;
+    -ms-overflow-style:none; scrollbar-width:none;
+  }
+  .chiprow::-webkit-scrollbar{ display:none; }
+  .chip{
+    flex-shrink:0;
+    padding: 7px 13px;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: #D8DCE8;
+    font-size: 12.5px;
+    font-weight: 500;
+    cursor:pointer;
+    display:flex; align-items:center; gap:6px;
+  }
+  .chip .dot{ width:7px; height:7px; border-radius:50%; }
+  .chip.active{
+    background: rgba(227,168,59,0.18);
+    border-color: var(--gold);
+    color: var(--gold-2);
+    font-weight:600;
+  }
+
+  main{ max-width: 640px; margin: 0 auto; padding: 10px 18px 40px; }
+
+  /* ---------- score strip ---------- */
+  .scorestrip{
+    display:flex; gap:10px; margin: 12px 0 6px;
+  }
+  .scorebox{
+    flex:1; background: rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);
+    border-radius:10px; padding:10px 12px; text-align:center;
+  }
+  .scorebox .v{ font-family:'Oswald',sans-serif; font-size:19px; font-weight:700; color: var(--gold-2); }
+  .scorebox .l{ font-size:10px; color:#AEB6CC; text-transform:uppercase; letter-spacing:.06em; margin-top:2px;}
+
+  /* ---------- quiz card ---------- */
+  .stage{ margin-top: 14px; }
+  .card{
+    background: var(--paper);
+    color: var(--ink);
+    border-radius: 16px;
+    padding: 22px 20px 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  }
+  .card-cat{
+    display:inline-flex; align-items:center; gap:6px;
+    font-size: 11.5px; font-weight:700; text-transform:uppercase; letter-spacing:.05em;
+    color: var(--navy-3); background: var(--cream); padding:4px 10px; border-radius:20px;
+    margin-bottom: 12px;
+  }
+  .card-cat .dot{ width:7px; height:7px; border-radius:50%; }
+  .qtext{ font-size: 17px; font-weight:600; line-height:1.4; margin: 0 0 16px; color: var(--navy);}
+  .options{ display:flex; flex-direction:column; gap:9px; }
+  .opt{
+    text-align:left;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1.5px solid #E1DCCB;
+    background: #fff;
+    font-family:'Work Sans',sans-serif;
+    font-size: 14.5px; color: var(--ink);
+    cursor:pointer;
+    display:flex; align-items:center; gap:10px;
+  }
+  .opt .letter{
+    flex-shrink:0; width:24px; height:24px; border-radius:50%;
+    background: var(--cream); color: var(--navy-3);
+    font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center;
+    font-family:'Oswald',sans-serif;
+  }
+  .opt:active{ transform: scale(0.99); }
+  .opt.correct{ background: var(--ok-bg); border-color: var(--ok); }
+  .opt.correct .letter{ background: var(--ok); color:#fff; }
+  .opt.wrong{ background: var(--bad-bg); border-color: var(--bad); }
+  .opt.wrong .letter{ background: var(--bad); color:#fff; }
+  .opt[disabled]{ cursor:default; }
+  .opt.dim{ opacity:0.55; }
+
+  .explain{
+    margin-top: 14px; padding: 13px 14px; border-radius: 10px;
+    background: var(--cream); font-size: 13.5px; line-height:1.5; color: var(--navy-2);
+    display:none;
+  }
+  .explain.show{ display:block; }
+  .explain b{ color: var(--navy); }
+
+  .card-actions{ margin-top: 16px; display:flex; justify-content:flex-end; }
+  .btn{
+    font-family:'Oswald',sans-serif; font-weight:600; font-size:14px;
+    padding: 11px 22px; border-radius: 10px; border:none; cursor:pointer;
+    background: var(--navy); color: var(--gold-2);
+    letter-spacing:.02em;
+  }
+  .btn:active{ transform: scale(0.98); }
+  .btn.ghost{
+    background: transparent; color: var(--navy-3); border: 1.5px solid #D9D3C0;
+  }
+
+  /* flashcards */
+  .flashwrap{ perspective: 1200px; margin-top:14px; }
+  .flashcard{
+    position:relative; min-height: 260px; border-radius:16px;
+    cursor:pointer;
+    transform-style: preserve-3d; transition: transform 0.5s cubic-bezier(.4,.2,.2,1);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  }
+  .flashcard.flipped{ transform: rotateY(180deg); }
+  .face{
+    position:absolute; inset:0; border-radius:16px; padding:26px 22px;
+    backface-visibility:hidden; display:flex; flex-direction:column;
+  }
+  .face.front{ background: var(--paper); color: var(--navy); }
+  .face.back{ background: var(--navy-3); color: var(--cream); transform: rotateY(180deg); }
+  .face .tag{ font-size:11px; text-transform:uppercase; letter-spacing:.06em; font-weight:700; opacity:0.65; margin-bottom:10px;}
+  .face .txt{ font-size:16.5px; font-weight:600; line-height:1.45; flex:1; display:flex; align-items:center;}
+  .face .hint{ font-size:11.5px; opacity:0.55; text-align:center; margin-top:10px;}
+  .flash-actions{ display:flex; gap:10px; margin-top:16px; }
+  .flash-actions .btn{ flex:1; }
+  .btn-again{ background: var(--bad-bg); color: var(--bad); }
+  .btn-know{ background: var(--ok-bg); color: var(--ok); }
+
+  .empty{ text-align:center; padding: 60px 20px; color:#AEB6CC; }
+  .empty .big{ font-size: 40px; margin-bottom:10px; }
+
+  footer{ text-align:center; color:#5A6178; font-size:11px; padding: 14px 0 6px;}
+
+  @media (prefers-color-scheme: light){
+    body{ background: var(--navy); }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-row">
+    <div class="brand">
+      <div class="brand-badge">AG</div>
+      <div class="brand-text">
+        <h1>Révision examen</h1>
+        <span>Agent de gardiennage — Securitas</span>
+      </div>
+    </div>
+    <div class="countdown">
+      <div class="num" id="countdownNum">—</div>
+      <div class="lbl" id="countdownLbl">chargement</div>
+    </div>
+  </div>
+  <div class="tabs">
+    <div class="tab active" data-mode="quiz">QCM</div>
+    <div class="tab" data-mode="flash">Flashcards</div>
+    <div class="tab" data-mode="weak">Points faibles</div>
+  </div>
+</div>
+
+<div class="chiprow" id="chiprow"></div>
+
+<main>
+  <div class="scorestrip">
+    <div class="scorebox"><div class="v" id="statSeen">0</div><div class="l">Vues</div></div>
+    <div class="scorebox"><div class="v" id="statOk">0%</div><div class="l">Réussite</div></div>
+    <div class="scorebox"><div class="v" id="statStreak">0</div><div class="l">Série</div></div>
+  </div>
+
+  <div class="stage" id="stage"></div>
+</main>
+
+<footer>Progression sauvegardée automatiquement sur cet appareil</footer>
+
+<script>
+/* ---------------- DATA ---------------- */
+const CATS = [
+  {id:'orga',  label:'Formes d’organisations', color:'#E3A83B'},
+  {id:'ctrl',  label:'Contrôle & sanctions',    color:'#C1443C'},
+  {id:'comp',  label:'Compétences',             color:'#4C9A6E'},
+  {id:'armes', label:'Armes & chien',           color:'#D9762E'},
+  {id:'pers',  label:'Personnes',               color:'#5B7FD9'},
+  {id:'act13', label:'Les 13 activités',        color:'#B4534F'},
+  {id:'spv07', label:'Gardiennage événements',  color:'#8A6BB8'},
+];
+
+const Q = [
+// ORGA
+{id:'o1',cat:'orga',q:"Combien d'activités de gardiennage la loi définit-elle ?",opts:["9","11","13","15"],a:2,ex:"La loi fixe précisément 13 activités de gardiennage, de la surveillance statique (1) au contrôle de personnes (13)."},
+{id:'o2',cat:'orga',q:"Quel type d'organisation dispose de compétences supplémentaires comme le spray incapacitant, les menottes, le PV et l'usage de la contrainte ?",opts:["Les entreprises de consultance","Les services de sécurité (transport public)","Les organismes de formation","Les entreprises de systèmes d'alarme"],a:1,ex:"Les services de sécurité internes des sociétés publiques de transport en commun disposent de ces compétences supplémentaires."},
+{id:'o3',cat:'orga',q:"Quels sont les deux régimes d'exception aux formes d'organisation classiques ?",opts:["Le régime bénévole et le titulaire de concession","Le régime public et le régime privé","Le régime militaire et le régime civil","Le régime provisoire et le régime définitif"],a:0,ex:"Ce sont les deux exceptions citées : le régime bénévole et le titulaire de concession."},
+{id:'o4',cat:'orga',q:"Une entreprise de consultance en sécurité peut-elle exercer en même temps une activité de gardiennage ?",opts:["Oui, sans restriction","Non, c'est interdit de cumuler","Oui, mais seulement en sécurité maritime","Oui, si elle a une autorisation spéciale"],a:1,ex:"Il y a interdiction d'exercer simultanément : gardiennage, système d'alarme, système caméra et sécurité maritime en plus de la consultance."},
+{id:'o5',cat:'orga',q:"Qu'est-ce qu'un service interne de gardiennage ?",opts:["Une entreprise qui forme des agents","Un service organisé par une personne physique/morale pour ses propres besoins ou des tiers liés","Un service uniquement militaire","Un service qui ne peut jamais gérer de site tiers"],a:1,ex:"Le service interne gère les lieux de la personne qui l'organise, ou des tiers liés par dénomination commerciale ou par mission."},
+{id:'o6',cat:'orga',q:"Le transport d'argent est-il soumis à autorisation SPF s'il est inférieur à 30 000 € et sans lien vers un client ?",opts:["Oui, toujours","Non, c'est une exception","Uniquement si c'est du numéraire","Uniquement le week-end"],a:1,ex:"Le transport d'argent < 30 000 € et pas de/vers un client fait partie des exceptions listées pour les services internes."},
+{id:'o7',cat:'orga',q:"Que propose un organisme de formation dans ce secteur ?",opts:["Il surveille des biens","Il offre ou organise une formation de gardiennage","Il fabrique des systèmes d'alarme","Il gère les amendes administratives"],a:1,ex:"L'organisme de formation est l'entreprise qui offre ou organise une formation de gardiennage."},
+{id:'o8',cat:'orga',q:"Une entreprise de sécurité maritime intervient contre quel type de menace ?",opts:["Le vol en magasin","La piraterie à bord des navires","Les fraudes administratives","Les incendies"],a:1,ex:"Ces entreprises offrent des services de surveillance, protection et sécurité contre la piraterie à bord des navires."},
+
+// CONTROLE
+{id:'c1',cat:'ctrl',q:"Qui peut effectuer le contrôle du respect de la loi sur le gardiennage ?",opts:["Uniquement les inspecteurs du SPF","Les inspecteurs SPF, la police, le Comité P et, dans certains cas, le citoyen","Uniquement la police locale","Uniquement l'employeur"],a:1,ex:"Le contrôle peut être exercé par plusieurs acteurs selon leur compétence : SPF, police, Comité P, et le citoyen dans certains cas."},
+{id:'c2',cat:'ctrl',q:"Quelle est la sanction la plus légère prévue ?",opts:["L'amende administrative","L'arrangement à l'amiable","L'avertissement","Le retrait de carte"],a:2,ex:"L'avertissement vise à exhorter le contrevenant à mettre fin à l'infraction, sans répétition dans les 3 années écoulées."},
+{id:'c3',cat:'ctrl',q:"À quel pourcentage de l'amende correspond l'arrangement à l'amiable ?",opts:["10%","30%","50%","70%"],a:1,ex:"L'arrangement à l'amiable = 30% de l'amende, jamais inférieur à 100€, à payer dans les 30 jours dès l'envoi."},
+{id:'c4',cat:'ctrl',q:"Entre quelles bornes se situe le montant de l'amende administrative ?",opts:["Entre 50 et 5 000 €","Entre 100 et 25 000 €","Entre 500 et 50 000 €","Entre 1 000 et 100 000 €"],a:1,ex:"L'amende administrative est toujours comprise entre 100 et 25 000 €."},
+{id:'c5',cat:'ctrl',q:"Que se passe-t-il si la même infraction est constatée dans les 3 ans (récidive) ?",opts:["Rien de spécial","Le taux de l'amende est majoré, voire doublé","L'agent est automatiquement licencié","L'amende est annulée"],a:1,ex:"En cas de récidive, le taux des amendes est majoré de moitié, voire doublé si un arrangement à l'amiable avait déjà été accepté."},
+{id:'c6',cat:'ctrl',q:"Quel est le délai de prescription des infractions à cette loi ?",opts:["1 an","3 ans","5 ans","10 ans"],a:2,ex:"Le délai de prescription est fixé à 5 ans."},
+{id:'c7',cat:'ctrl',q:"Où et dans quel délai peut-on introduire un recours contre une sanction ?",opts:["Au Conseil d'État, dans les 60 jours","Au Tribunal de Première Instance de Bruxelles, dans le délai de paiement (30 jours)","Auprès du SPF, sans délai","Il n'existe aucun recours possible"],a:1,ex:"Le recours se fait devant le Tribunal de Première Instance de Bruxelles, dans le délai de paiement de 30 jours ; après, plus aucun appel n'est possible."},
+{id:'c8',cat:'ctrl',q:"En cas de concours d'infractions (plusieurs infractions à la fois), comment est calculée l'amende ?",opts:["On additionne toutes les infractions","On prend le maximum = le double de l'infraction la plus élevée","On ne retient que la première infraction","La sanction est automatiquement annulée"],a:1,ex:"En cas de concours d'infractions, le maximum de l'amende correspond au double de l'infraction la plus élevée."},
+
+// COMPETENCES
+{id:'k1',cat:'comp',q:"Un agent peut-il refuser l'accès à une personne qui refuse le contrôle d'accès (fouille de bagages, palpation) ?",opts:["Non, jamais","Oui, le refus d'accès est prévu par la loi","Oui, mais seulement avec l'accord de la police sur place","Non, il doit laisser entrer et prévenir plus tard"],a:1,ex:"Le refus d'accès (art. 105) est permis si la personne ne se soumet pas volontairement au contrôle."},
+{id:'k2',cat:'comp',q:"Dans quel type de lieux s'appliquent les compétences dites 'situationnelles' ?",opts:["Uniquement dans les magasins","Aéroports, gares internationales, sites nucléaires, ambassades, sites SEVESO...","Uniquement lors de festivals","Uniquement dans les transports en commun"],a:1,ex:"Les compétences situationnelles concernent des lieux sensibles précisément définis : aéroports, gares internationales, domaines militaires, institutions internationales, ambassades, sites nucléaires, SEVESO."},
+{id:'k3',cat:'comp',q:"Un inspecteur de magasin peut-il porter une arme ?",opts:["Oui, un spray incapacitant","Oui, des menottes","Non, il ne peut pas porter d'arme","Oui, s'il a une formation spécifique"],a:2,ex:"L'inspecteur de magasin est explicitement 'pas d'armes' dans ses compétences."},
+{id:'k4',cat:'comp',q:"En cas d'intervention après une alarme, que doit prioritairement faire l'agent mobile ?",opts:["Interpeller le suspect lui-même","Prévenir les infractions et contacter la police immédiatement après incident","Attendre les instructions du client uniquement","Pénétrer dans les lieux sans délai"],a:1,ex:"L'agent mobile doit prévenir les infractions et contacter la police immédiatement après un incident constaté."},
+{id:'k5',cat:'comp',q:"Lors d'une fouille en magasin, que peut vérifier l'agent ?",opts:["Le contenu du sac de la personne elle-même","Uniquement la marchandise du magasin (refus de fouille de la personne = appel police)","Le contenu du portefeuille","Rien du tout"],a:1,ex:"L'agent peut demander à voir/vider un sac uniquement pour la marchandise du magasin ; il ne peut fouiller la personne (refus → police)."},
+{id:'k6',cat:'comp',q:"Un agent de commande de moyens techniques (drones, caméras mobiles) peut-il agir sans supervision du mandant ?",opts:["Oui, toujours","Non, uniquement sous supervision du mandant","Oui si c'est un drone","Cela dépend du client"],a:1,ex:"La commande de moyens techniques est uniquement autorisée sous la supervision du mandant."},
+{id:'k7',cat:'comp',q:"Dans une salle de contrôle caméra, l'agent est-il habilité à faire des recherches sur les images ?",opts:["Oui, sans limite","Non, ce n'est pas habilité — c'est du domaine de la police","Oui, mais seulement 24h","Oui, avec l'accord du client uniquement"],a:1,ex:"L'agent n'est pas habilité aux recherches sur les images enregistrées, qui restent du domaine de la police ; elles sont conservées un mois."},
+{id:'k8',cat:'comp',q:"Un agent de sécurité affecté au transport protégé (sécurité maximale) doit avoir quelles compétences ?",opts:["Aucune formation particulière","Compétences de conduite, route, gyrophares, signaux et application de procédures strictes","Uniquement la conduite","Uniquement le tir"],a:1,ex:"Le transport protégé demande une approche intégrale : compétences de conduite, route, usage de gyrophares/signaux et application stricte des procédures."},
+
+// ARMES / CHIEN
+{id:'a1',cat:'armes',q:"Quel est le calibre maximum autorisé pour un pistolet ?",opts:["7,65 mm","9 mm","10 mm","11,43 mm"],a:1,ex:"Le pistolet est limité à un calibre maximum de 9 mm."},
+{id:'a2',cat:'armes',q:"Quel calibre est utilisé pour une arme à feu lourde, réservée à la sécurité maritime ?",opts:["Calibre 12","Calibre 22","Calibre 50","Calibre 9mm"],a:2,ex:"L'arme à feu lourde des entreprises de sécurité maritime est de calibre 50, semi-automatique ou non automatique."},
+{id:'a3',cat:'armes',q:"Quel est l'âge minimum d'un chien de patrouille ?",opts:["6 mois","12 mois","16 mois","24 mois"],a:1,ex:"Le chien de patrouille doit avoir minimum 12 mois."},
+{id:'a4',cat:'armes',q:"Combien de maîtres maximum un chien de patrouille peut-il avoir ?",opts:["1","2","3","Illimité"],a:1,ex:"Un chien de patrouille peut avoir un maximum de 2 maîtres."},
+{id:'a5',cat:'armes',q:"Quelle est la longueur maximale de laisse pour un chien de patrouille, et doit-il porter une muselière ?",opts:["1 m, sans muselière","2 m, muselière en permanence","5 m, muselière uniquement la nuit","Pas de laisse obligatoire"],a:1,ex:"Le chien de patrouille est tenu en laisse maximum 2 m et doit porter une muselière en permanence."},
+{id:'a6',cat:'armes',q:"Quel âge minimum et combien de maîtres pour un chien pisteur ?",opts:["12 mois, 2 maîtres","16 mois, 1 seul maître","24 mois, 1 seul maître","16 mois, 2 maîtres"],a:1,ex:"Le chien pisteur doit avoir minimum 16 mois et un seul maître (contrairement au chien de patrouille)."},
+{id:'a7',cat:'armes',q:"Quelle est la durée maximale de prestation d'un chien pisteur avant une pause ?",opts:["30 min de prestation / 30 min de pause, 12h max","1h de prestation / 15 min de pause, 8h max","Pas de limite","2h de prestation / 1h de pause, 10h max"],a:0,ex:"Un chien pisteur preste maximum 12h, selon un rythme de 30 minutes de prestation pour 30 minutes de pause."},
+{id:'a8',cat:'armes',q:"Le chien pisteur doit-il toujours porter une muselière ?",opts:["Oui, sans exception","Non, sauf durant le pistage lui-même","Non, jamais","Uniquement la nuit"],a:1,ex:"Le chien pisteur porte une muselière sauf durant le pistage."},
+
+// PERSONNES
+{id:'p1',cat:'pers',q:"Combien de catégories de personnes sont définies par la loi (dirigeants, personnel...) ?",opts:["4","5","6","8"],a:2,ex:"Six catégories : direction, membres du conseil d'administration, personnel exécutant, personnel commercial, chargés de cours, autre fonction."},
+{id:'p2',cat:'pers',q:"Quel est l'âge minimum requis pour exercer une fonction dans ce secteur ?",opts:["16 ans","18 ans","21 ans","25 ans"],a:1,ex:"La condition n°5 impose un âge minimum de 18 ans."},
+{id:'p3',cat:'pers',q:"Quelle est la durée de validité standard d'une carte d'identification ?",opts:["2 ans","3 ans","5 ans","10 ans"],a:2,ex:"La carte est valable 5 ans au plus, selon certains cas."},
+{id:'p4',cat:'pers',q:"Quelle est la durée de validité d'une carte temporaire ?",opts:["1 mois","3 mois","6 mois","1 an"],a:2,ex:"La carte temporaire est valable 6 mois, et nécessite test psychotechnique + bloc 1 CDI en centre de formation."},
+{id:'p5',cat:'pers',q:"Qui est à l'initiative d'une enquête de sécurité ?",opts:["Le client uniquement","Le SPF","L'agent lui-même","Le tribunal"],a:1,ex:"L'enquête de sécurité est menée à l'initiative du SPF (inspecteurs, Comité P, Sûreté de l'État)."},
+{id:'p6',cat:'pers',q:"Un agent doit-il montrer sa carte d'identification à toute personne qui la demande ?",opts:["Non, uniquement à la police","Oui, il doit la montrer à toute personne qui le demande","Uniquement à son employeur","Non, jamais"],a:1,ex:"L'agent doit montrer sa carte à toute personne qui lui en fait la demande, et la remettre au SPF ou à la police en cas de contrôle."},
+{id:'p7',cat:'pers',q:"Quelles sont approximativement les dimensions de la carte d'identification ?",opts:["85,6 x 54 mm","100 x 70 mm","54 x 40 mm","120 x 80 mm"],a:0,ex:"La carte mesure L=85,6mm, l=54mm, H=0,76mm — le format standard d'une carte de crédit."},
+{id:'p8',cat:'pers',q:"Un dirigeant aidant (Exe10bis) peut superviser combien d'agents au maximum ?",opts:["5 agents","10 agents","15 agents","Illimité"],a:2,ex:"L'Exe10bis exerce l'autorité sur maximum 15 agents, sans responsabilité stratégique, et doit avoir minimum 12 mois d'expérience dans l'activité."},
+
+// LES 13 ACTIVITES
+{id:'t1',cat:'act13',q:"Que couvre l'Activité 1 ?",opts:["Gardiennage statique de biens mobiliers et immobiliers","Gardiennage mobile et intervention après alarme","Transport et manipulation de valeurs","Gestion centrale d'alarme"],a:0,ex:"L'Activité 1 est le gardiennage statique de biens mobiliers et immobiliers."},
+{id:'t2',cat:'act13',q:"Que couvre l'Activité 4 ?",opts:["Protection de personnes","Inspection magasin","Gestion centrale d'alarme","Gardiennage d'événements"],a:2,ex:"L'Activité 4 est la gestion centrale d'alarme (suivi des signaux, prévention client/secours, rappel hors e-call)."},
+{id:'t3',cat:'act13',q:"Quelle activité concerne le transport et la manipulation de valeurs ?",opts:["Activité 2","Activité 3","Activité 5","Activité 9"],a:1,ex:"L'Activité 3 couvre le transport et la manipulation de valeurs (documents, argent, bijoux...)."},
+{id:'t4',cat:'act13',q:"La fouille de biens (Activité 9) est-elle préventive ou répressive ?",opts:["Répressive uniquement","Préventive uniquement","Les deux à égalité","Ni l'une ni l'autre"],a:1,ex:"L'Activité 9 (fouille de biens) est uniquement préventive : elle vise à garantir l'absence d'objets indésirables."},
+{id:'t5',cat:'act13',q:"Que peut faire un agent dans le cadre de l'Activité 10 (constatations sur le domaine public) ?",opts:["Sanctionner directement","Uniquement des constatations matérielles, sans compétence particulière","Faire des recherches judiciaires","Arrêter des suspects"],a:1,ex:"L'Activité 10 se limite à des constatations matérielles (ex. loi sur les sanctions administratives communales), sans recherches ni compétence particulière."},
+{id:'t6',cat:'act13',q:"Quelle activité concerne l'accompagnement de groupe pour la sécurité routière ?",opts:["Activité 8","Activité 11","Activité 12","Activité 13"],a:1,ex:"L'Activité 11 couvre l'accompagnement de groupe en vue de la sécurité routière, avec les mêmes compétences que la loi du 01/12/1975."},
+{id:'t7',cat:'act13',q:"Quelle activité couvre le contrôle de personnes qui n'entre pas dans les activités 6, 7 ou 8 ?",opts:["Activité 9","Activité 10","Activité 12","Activité 13"],a:3,ex:"L'Activité 13 couvre toute forme de surveillance et de contrôle de personnes dans le cadre du maintien de la sécurité, hors 6, 7, 8."},
+{id:'t8',cat:'act13',q:"L'inspection magasin (Activité 6) peut-elle être exercée par un détective privé ?",opts:["Oui, c'est même recommandé","Non, ce n'est pas un détective","Oui, si formé en plus","Cela dépend du magasin"],a:1,ex:"Il est précisé que l'inspecteur magasin 'n'est pas un détective'."},
+
+// SPV07
+{id:'s1',cat:'spv07',q:"Quelles sont les 3 organisations possibles pour assurer le gardiennage lors d'un festival ?",opts:["Entreprise de gardiennage pro, service de sécurité interne, régime d'association","Police, pompiers, ambulance","Bourgmestre, Conseil d'État, Comité P","Bénévoles uniquement"],a:0,ex:"Trois organisations sont possibles : entreprise de gardiennage professionnelle, service de sécurité interne autorisé, ou régime d'association."},
+{id:'s2',cat:'spv07',q:"Sous quelles conditions le régime d'association est-il autorisé ?",opts:["Rémunération obligatoire et illimitée","Sans but lucratif, membre lié, gardiennage sporadique (max 3-4x/an), aucune rémunération, permission du bourgmestre","Uniquement pour les grandes entreprises","Sans aucune condition"],a:1,ex:"Le régime d'association exige : pas de but lucratif, lien effectif avec l'association, gardiennage sporadique (max 3-4 fois/an), aucune rémunération, et permission du bourgmestre."},
+{id:'s3',cat:'spv07',q:"Qui est responsable du contrôle de sécurité préalable d'un événement ?",opts:["La police seule","Le Bourgmestre","Le Comité P","Le SPF Intérieur"],a:1,ex:"Le Bourgmestre est responsable du contrôle de sécurité préalable ; la police analyse le risque et le conseille."},
+{id:'s4',cat:'spv07',q:"Qui analyse le risque de l'événement avant que le Bourgmestre ne décide ?",opts:["Les organisateurs eux-mêmes","La police","Le Conseil d'État","L'entreprise de gardiennage"],a:1,ex:"La police analyse le risque de l'événement ; 'police conseille, Bourgmestre décide'."},
+{id:'s5',cat:'spv07',q:"Sur le frontstage, qu'est-ce qu'une personne 'PAS gardiennage' (non-agent) est autorisée à faire ?",opts:["Empêcher l'accès au podium","Surveiller le public devant la scène","Aider les secours lors de l'évacuation du public","Effectuer des rétentions"],a:2,ex:"Une personne non-agent peut aider les secours lors de l'évacuation, mais ne peut ni surveiller le public devant la scène ni empêcher l'accès au podium (réservé au gardiennage)."},
+{id:'s6',cat:'spv07',q:"Qui peut effectuer une rétention lors d'un contrôle d'accès à un événement ?",opts:["N'importe quel bénévole","Uniquement le personnel de gardiennage","Uniquement la police","Le personnel PAS gardiennage aussi"],a:1,ex:"La rétention (comme le contrôle d'accès et le refus d'accès) est réservée au gardiennage, pas au personnel non-agent."},
+{id:'s7',cat:'spv07',q:"Un recours est-il possible contre la décision du Bourgmestre concernant le plan de sécurité d'un événement ?",opts:["Non, aucun recours","Oui, recours possible au Conseil d'État","Oui, mais uniquement au Tribunal de commerce","Non, sauf accord du SPF"],a:1,ex:"Un recours au Conseil d'État reste possible contre la décision du Bourgmestre."},
+{id:'s8',cat:'spv07',q:"Combien de temps avant l'événement les données d'identification doivent-elles être transmises à la police ?",opts:["1 semaine avant","6 semaines avant minimum","24h avant","Aucun délai requis"],a:1,ex:"Les données d'ID doivent être transmises à la police minimum 6 semaines avant l'événement."},
+];
+
+/* ---------------- STATE / STORAGE ---------------- */
+const STORE_KEY = 'gardiennage-progress-v1';
+function loadProgress(){
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    if(!raw) return {};
+    return JSON.parse(raw);
+  }catch(e){ return {}; }
+}
+function saveProgress(p){
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify(p)); }catch(e){}
+}
+let progress = loadProgress(); // {qid: {seen, correct, wrong, lastCorrect}}
+let streak = 0;
+try{ streak = parseInt(localStorage.getItem('gardiennage-streak-v1')||'0',10); }catch(e){ streak = 0; }
+
+let mode = 'quiz';
+let activeCat = 'all';
+let queue = [];
+let qIndex = 0;
+let answered = false;
+
+const catById = id => CATS.find(c=>c.id===id);
+
+/* ---------------- COUNTDOWN ---------------- */
+function updateCountdown(){
+  const now = new Date();
+  const target = new Date('2026-09-23T08:00:00+02:00'); // jour de l'examen
+  const diffMs = target - now;
+  const el = document.getElementById('countdownNum');
+  const lbl = document.getElementById('countdownLbl');
+  if(diffMs <= 0){ el.textContent = "J-0"; lbl.textContent = "Bonne chance !"; return; }
+  const hours = Math.floor(diffMs/3600000);
+  if(hours < 24){
+    el.textContent = hours+'h';
+    lbl.textContent = "avant l'examen";
+  } else {
+    const days = Math.ceil(diffMs/86400000);
+    el.textContent = days;
+    lbl.textContent = days>1 ? "jours avant" : "jour avant";
+  }
+}
+updateCountdown();
+setInterval(updateCountdown, 60000);
+
+/* ---------------- CHIPS ---------------- */
+function renderChips(){
+  const row = document.getElementById('chiprow');
+  row.innerHTML = '';
+  const allChip = document.createElement('div');
+  allChip.className = 'chip' + (activeCat==='all' ? ' active' : '');
+  allChip.innerHTML = `<span class="dot" style="background:#E3A83B"></span>Tout`;
+  allChip.onclick = () => { activeCat='all'; renderChips(); buildQueue(); };
+  row.appendChild(allChip);
+  CATS.forEach(c=>{
+    const chip = document.createElement('div');
+    chip.className = 'chip' + (activeCat===c.id ? ' active' : '');
+    chip.innerHTML = `<span class="dot" style="background:${c.color}"></span>${c.label}`;
+    chip.onclick = () => { activeCat = c.id; renderChips(); buildQueue(); };
+    row.appendChild(chip);
+  });
+}
+
+/* ---------------- STATS ---------------- */
+function computeStats(){
+  const ids = Q.filter(q => activeCat==='all' || q.cat===activeCat).map(q=>q.id);
+  let seen=0, correct=0, total=0;
+  ids.forEach(id=>{
+    const p = progress[id];
+    if(p && p.seen){ seen++; total += p.correct+p.wrong; correct += p.correct; }
+  });
+  document.getElementById('statSeen').textContent = seen + '/' + ids.length;
+  document.getElementById('statOk').textContent = total>0 ? Math.round(100*correct/total)+'%' : '—';
+  document.getElementById('statStreak').textContent = streak;
+}
+
+/* ---------------- QUEUE BUILD ---------------- */
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+function buildQueue(){
+  let pool = Q.filter(q => activeCat==='all' || q.cat===activeCat);
+  if(mode==='weak'){
+    pool = pool.filter(q=>{
+      const p = progress[q.id];
+      return p && p.wrong > p.correct; // plus d'erreurs que de réussites
+    });
+  }
+  queue = shuffle(pool);
+  qIndex = 0;
+  answered = false;
+  computeStats();
+  render();
+}
+
+/* ---------------- QUIZ RENDER ---------------- */
+function recordAnswer(id, correct){
+  if(!progress[id]) progress[id] = {seen:0, correct:0, wrong:0};
+  progress[id].seen++;
+  if(correct){ progress[id].correct++; streak++; }
+  else { progress[id].wrong++; streak = 0; }
+  saveProgress(progress);
+  try{ localStorage.setItem('gardiennage-streak-v1', String(streak)); }catch(e){}
+  computeStats();
+}
+
+function renderQuiz(){
+  const stage = document.getElementById('stage');
+  if(queue.length===0){
+    stage.innerHTML = emptyState();
+    return;
+  }
+  if(qIndex >= queue.length){
+    stage.innerHTML = `<div class="empty"><div class="big">✔</div>Série terminée pour cette sélection.<br><br>
+      <button class="btn" id="restartBtn" style="background:var(--gold);color:var(--navy);">Recommencer</button></div>`;
+    document.getElementById('restartBtn').onclick = buildQueue;
+    return;
+  }
+  const item = queue[qIndex];
+  const cat = catById(item.cat);
+  answered = false;
+  const letters = ['A','B','C','D'];
+  stage.innerHTML = `
+    <div class="card">
+      <div class="card-cat"><span class="dot" style="background:${cat.color}"></span>${cat.label} · ${qIndex+1}/${queue.length}</div>
+      <div class="qtext">${item.q}</div>
+      <div class="options">
+        ${item.opts.map((o,i)=>`<button class="opt" data-i="${i}"><span class="letter">${letters[i]}</span><span>${o}</span></button>`).join('')}
+      </div>
+      <div class="explain" id="explainBox"><b>Explication.</b> ${item.ex}</div>
+      <div class="card-actions"><button class="btn ghost" id="nextBtn" style="display:none;">Suivant →</button></div>
+    </div>
+  `;
+  stage.querySelectorAll('.opt').forEach(btn=>{
+    btn.onclick = () => {
+      if(answered) return;
+      answered = true;
+      const i = parseInt(btn.dataset.i,10);
+      const correct = i === item.a;
+      stage.querySelectorAll('.opt').forEach((b,bi)=>{
+        b.setAttribute('disabled','');
+        if(bi===item.a) b.classList.add('correct');
+        else if(bi===i) b.classList.add('wrong');
+        else b.classList.add('dim');
+      });
+      document.getElementById('explainBox').classList.add('show');
+      document.getElementById('nextBtn').style.display = 'inline-block';
+      recordAnswer(item.id, correct);
+    };
+  });
+  const nextBtn = document.getElementById('nextBtn');
+  nextBtn.onclick = () => { qIndex++; renderQuiz(); };
+}
+
+/* ---------------- FLASHCARD RENDER ---------------- */
+function renderFlash(){
+  const stage = document.getElementById('stage');
+  if(queue.length===0){
+    stage.innerHTML = emptyState();
+    return;
+  }
+  if(qIndex >= queue.length){
+    stage.innerHTML = `<div class="empty"><div class="big">✔</div>Toutes les cartes vues.<br><br>
+      <button class="btn" id="restartBtn" style="background:var(--gold);color:var(--navy);">Recommencer</button></div>`;
+    document.getElementById('restartBtn').onclick = buildQueue;
+    return;
+  }
+  const item = queue[qIndex];
+  const cat = catById(item.cat);
+  stage.innerHTML = `
+    <div class="flashwrap">
+      <div class="flashcard" id="fc">
+        <div class="face front">
+          <div class="tag">${cat.label} · ${qIndex+1}/${queue.length}</div>
+          <div class="txt">${item.q}</div>
+          <div class="hint">Touchez la carte pour voir la réponse</div>
+        </div>
+        <div class="face back">
+          <div class="tag">Réponse</div>
+          <div class="txt">${item.opts[item.a]}<br><br><span style="font-size:13px;font-weight:400;opacity:0.85;">${item.ex}</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="flash-actions">
+      <button class="btn btn-again" id="againBtn">À revoir</button>
+      <button class="btn btn-know" id="knowBtn">Je savais ✓</button>
+    </div>
+  `;
+  const fc = document.getElementById('fc');
+  fc.onclick = () => fc.classList.toggle('flipped');
+  document.getElementById('againBtn').onclick = (e) => { e.stopPropagation(); recordAnswer(item.id,false); qIndex++; renderFlash(); };
+  document.getElementById('knowBtn').onclick = (e) => { e.stopPropagation(); recordAnswer(item.id,true); qIndex++; renderFlash(); };
+}
+
+function emptyState(){
+  if(mode==='weak'){
+    return `<div class="empty"><div class="big">👍</div>Aucun point faible détecté pour l'instant dans cette sélection.<br>Continue le QCM pour en identifier !</div>`;
+  }
+  return `<div class="empty"><div class="big">—</div>Aucune question dans cette catégorie.</div>`;
+}
+
+function render(){
+  if(mode==='flash') renderFlash();
+  else renderQuiz();
+}
+
+/* ---------------- TABS ---------------- */
+document.querySelectorAll('.tab').forEach(t=>{
+  t.onclick = () => {
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    mode = t.dataset.mode;
+    buildQueue();
+  };
+});
+
+/* ---------------- INIT ---------------- */
+renderChips();
+buildQueue();
+</script>
+</body>
+</html>
